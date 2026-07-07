@@ -32,15 +32,19 @@ impl eframe::App for Ra2ClickerApp {
         if !self.positioned {
             self.positioned = true;
             let cfg = shared.config.read().unwrap();
-            let px = cfg.window_pos_x.min(100).max(0) as f32;
-            let py = cfg.window_pos_y.min(100).max(0) as f32;
-            let ww = 340.0;
-            let wh = self.current_h;
-            let (sw, sh) = screen_size();
-            let x = ((sw as f32 - ww) * px / 100.0).max(0.0);
-            let y = ((sh as f32 - wh) * py / 100.0).max(0.0);
+            let px = cfg.window_pos_x;
+            let py = cfg.window_pos_y;
+            if px == 50 && py == 50 {
+                if let Some(cmd) = egui::ViewportCommand::center_on_screen(ctx) {
+                    ctx.send_viewport_cmd(cmd);
+                }
+            } else {
+                let (sw, sh) = screen_size();
+                let x = ((sw as f32 - 340.0) * px as f32 / 100.0).max(0.0);
+                let y = ((sh as f32 - 185.0) * py as f32 / 100.0).max(0.0);
+                ctx.send_viewport_cmd(egui::ViewportCommand::OuterPosition(egui::pos2(x, y)));
+            }
             drop(cfg);
-            ctx.send_viewport_cmd(egui::ViewportCommand::OuterPosition(egui::pos2(x, y)));
         }
 
         let mut cfg = shared.config.read().unwrap().clone();

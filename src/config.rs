@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::os::windows::process::CommandExt;
 use std::path::PathBuf;
 
 const HEADER: &str = r#"# ra2-clicker 配置文件
@@ -123,7 +124,10 @@ impl Config {
 }
 
 fn system_is_dark_mode() -> bool {
+    const CREATE_NO_WINDOW: u32 = 0x08000000;
+
     let out = std::process::Command::new("reg")
+        .creation_flags(CREATE_NO_WINDOW)
         .args([
             "query",
             r"HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
