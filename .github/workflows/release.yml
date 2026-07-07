@@ -9,9 +9,11 @@ jobs:
   build:
     strategy:
       matrix:
-        target:
-          - x86_64-pc-windows-msvc
-          - i686-pc-windows-msvc
+        include:
+          - target: x86_64-pc-windows-msvc
+            arch: x86_64
+          - target: i686-pc-windows-msvc
+            arch: x86
     runs-on: windows-latest
 
     steps:
@@ -22,14 +24,32 @@ jobs:
           toolchain: stable
           target: ${{ matrix.target }}
 
-      - name: Build release (${{ matrix.target }})
+      - name: Build release (${{ matrix.arch }})
         run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Upload artifact
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Build installer (${{ matrix.arch }})
+        shell: cmd
+        run: |
+          "C:\Program Files (x86)\Inno Setup 6\iscc.exe" installer.iss ^
+            /dMyAppVersion=${{ github.ref_name }} ^
+            /dArch=${{ matrix.arch }} ^
+            /dExeSource=target\${{ matrix.target }}\release\ra2-clicker.exe
+        working-directory: ${{ github.workspace }}
+
+      - name: Upload exe
         uses: actions/upload-artifact@v4
         with:
-          name: ra2-clicker-${{ github.ref_name }}-${{ matrix.target }}
+          name: ra2-clicker-${{ github.ref_name }}-${{ matrix.arch }}
           path: target/${{ matrix.target }}/release/ra2-clicker.exe
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: ra2-clicker-${{ github.ref_name }}-${{ matrix.arch }}-setup
+          path: ra2-clicker-${{ github.ref_name }}-${{ matrix.arch }}-setup.exe
 
   create-release:
     needs: build
@@ -46,5 +66,6 @@ jobs:
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
-          files: ra2-clicker-*.exe
+          files: |
+            ra2-clicker-*.exe
           generate_release_notes: true
