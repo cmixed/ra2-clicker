@@ -1,4 +1,4 @@
-use crate::engine::{self, is_game_running};
+use crate::engine::{self, is_game_running, screen_size};
 use eframe::egui;
 use std::process::Command;
 use std::sync::atomic::Ordering;
@@ -192,6 +192,20 @@ impl eframe::App for Ra2ClickerApp {
                     }
                 }
             });
+
+        if cfg.remember_position {
+            if let Some(outer) = ctx.input(|i| i.viewport().outer_rect) {
+                let (sw, sh) = screen_size();
+                let sw = sw as f32;
+                let sh = sh as f32;
+                let ow = outer.width();
+                let oh = outer.height();
+                if sw > ow && sh > oh {
+                    cfg.window_pos_x = (outer.min.x / (sw - ow) * 100.0).round().clamp(0.0, 100.0) as u32;
+                    cfg.window_pos_y = (outer.min.y / (sh - oh) * 100.0).round().clamp(0.0, 100.0) as u32;
+                }
+            }
+        }
 
         let _ = cfg.save();
         *shared.config.write().unwrap() = cfg;

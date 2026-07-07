@@ -31,6 +31,7 @@ const HEADER: &str = r#"# ra2-clicker 配置文件
 # font_size           = 字体大小 (10~24)
 # window_pos_x        = 窗口水平位置 (%)，50=居中
 # window_pos_y        = 窗口垂直位置 (%)，50=居中
+# remember_position   = 记住拖动位置 (true=启用, 关闭后使用上面百分比)
 
 "#;
 
@@ -69,6 +70,7 @@ pub struct Config {
     pub font_size: u32,
     pub window_pos_x: u32,
     pub window_pos_y: u32,
+    pub remember_position: bool,
 }
 
 fn default_hotkey() -> String {
@@ -106,6 +108,7 @@ impl Default for Config {
             font_size: 15,
             window_pos_x: 50,
             window_pos_y: 50,
+            remember_position: false,
         };
         s.sync_from_hotkey();
         s
