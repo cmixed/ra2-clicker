@@ -7,6 +7,11 @@ on:
 
 jobs:
   build:
+    strategy:
+      matrix:
+        target:
+          - x86_64-pc-windows-msvc
+          - i686-pc-windows-msvc
     runs-on: windows-latest
 
     steps:
@@ -15,18 +20,31 @@ jobs:
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: stable
+          target: ${{ matrix.target }}
 
-      - name: Build release
-        run: cargo build --release
+      - name: Build release (${{ matrix.target }})
+        run: cargo build --release --target ${{ matrix.target }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ra2-clicker-${{ github.ref_name }}
-          path: target/release/ra2-clicker.exe
+          name: ra2-clicker-${{ github.ref_name }}-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/ra2-clicker.exe
+
+  create-release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ra2-clicker-${{ github.ref_name }}-*
+          merge-multiple: true
 
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
-          files: target/release/ra2-clicker.exe
+          files: ra2-clicker-*.exe
           generate_release_notes: true
