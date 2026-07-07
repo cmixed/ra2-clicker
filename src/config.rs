@@ -31,7 +31,9 @@ const HEADER: &str = r#"# ra2-clicker 配置文件
 # font_size           = 字体大小 (10~24)
 # window_pos_x        = 窗口水平位置 (%)，50=居中
 # window_pos_y        = 窗口垂直位置 (%)，50=居中
-# remember_position   = 记住拖动位置 (true=启用, 关闭后使用上面百分比)
+# remember_position   = 记住位置开关 (true=使用下面记住的位置)
+# remember_pos_x      = 记住的水平位置 (%)，点击开关时自动保存
+# remember_pos_y      = 记住的垂直位置 (%)，点击开关时自动保存
 
 "#;
 
@@ -71,6 +73,8 @@ pub struct Config {
     pub window_pos_x: u32,
     pub window_pos_y: u32,
     pub remember_position: bool,
+    pub remember_pos_x: u32,
+    pub remember_pos_y: u32,
 }
 
 fn default_hotkey() -> String {
@@ -96,7 +100,7 @@ impl Default for Config {
             construction_bar_width: 160,
             screen_width: 0,
             auto_detect_mode: true,
-            auto_detect_interval_ms: 5000,
+            auto_detect_interval_ms: 10000,
             game_process_list: vec![
                 "gamemd".into(),
                 "game".into(),
@@ -109,6 +113,8 @@ impl Default for Config {
             window_pos_x: 50,
             window_pos_y: 50,
             remember_position: false,
+            remember_pos_x: 50,
+            remember_pos_y: 50,
         };
         s.sync_from_hotkey();
         s
@@ -168,10 +174,10 @@ impl Config {
     }
 
     pub fn path() -> PathBuf {
-        let mut path = std::env::current_exe()
+        let mut p = std::env::current_exe()
             .unwrap_or_else(|_| PathBuf::from("ra2-clicker"));
-        path.set_extension("toml");
-        path
+        p.set_extension("toml");
+        p
     }
 }
 

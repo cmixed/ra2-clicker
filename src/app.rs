@@ -1,4 +1,18 @@
-use crate::engine::{self, is_game_running, screen_size};
+use crate::engine::{self, is_game_running};
+
+#[repr(C)]
+struct RECT {
+    left: i32,
+    top: i32,
+    right: i32,
+    bottom: i32,
+}
+
+#[link(name = "user32")]
+extern "system" {
+    fn GetForegroundWindow() -> isize;
+    fn GetWindowRect(hWnd: isize, lpRect: *mut RECT) -> i32;
+}
 use eframe::egui;
 use std::process::Command;
 use std::sync::atomic::Ordering;
@@ -10,6 +24,8 @@ pub struct Ra2ClickerApp {
     show_advanced: bool,
     current_h: f32,
     show_about: bool,
+    hwnd: isize,
+    last_theme_dark: bool,
 }
 
 impl Default for Ra2ClickerApp {
@@ -20,6 +36,8 @@ impl Default for Ra2ClickerApp {
             show_advanced: false,
             current_h: 185.0,
             show_about: false,
+            hwnd: 0,
+            last_theme_dark: true,
         }
     }
 }
@@ -37,15 +55,19 @@ impl eframe::App for Ra2ClickerApp {
             ctx.set_visuals(v);
         } else {
             let mut v = egui::Visuals::light();
+            v.window_fill = egui::Color32::from_rgb(235, 236, 240);
             v.selection.bg_fill = egui::Color32::from_rgb(35, 125, 50);
             ctx.set_visuals(v);
         }
 
-        ctx.send_viewport_cmd(egui::ViewportCommand::SetTheme(if cfg.dark_mode {
-            egui::SystemTheme::Dark
-        } else {
-            egui::SystemTheme::Light
-        }));
+        if cfg.dark_mode != self.last_theme_dark {
+            self.last_theme_dark = cfg.dark_mode;
+            ctx.send_viewport_cmd(egui::ViewportCommand::SetTheme(if cfg.dark_mode {
+                egui::SystemTheme::Dark
+            } else {
+                egui::SystemTheme::Light
+            }));
+        }
 
         ctx.style_mut(|s| {
             let fs = cfg.font_size.clamp(10, 24) as f32;
@@ -65,7 +87,7 @@ impl eframe::App for Ra2ClickerApp {
             s.spacing.button_padding = egui::vec2(8.0, 3.0);
         });
 
-        let target_h = if self.show_advanced { 330.0 } else { 185.0 };
+        let target_h = if self.show_advanced { 350.0 } else { 185.0 };
         if (self.current_h - target_h).abs() > 0.5 {
             self.current_h = target_h;
             ctx.send_viewport_cmd(egui::ViewportCommand::InnerSize(egui::vec2(
@@ -201,6 +223,29 @@ impl eframe::App for Ra2ClickerApp {
                                 .clamping(egui::SliderClamping::Always),
                         );
                     }
+                    ui.horizontal(|ui: &mut egui::Ui| {
+                        let mut r = cfg.remember_position;
+                        toggle(ui, &mut r);
+                        if r != cfg.remember_position {
+                            cfg.remember_position = r;
+                            if r && self.hwnd != 0 {
+                                let mut rect = RECT { left: 0, top: 0, right: 0, bottom: 0 };
+                                unsafe { GetWindowRect(self.hwnd, &mut rect); }
+                                let scale = ctx.pixels_per_point();
+                                let screen = ctx.screen_rect();
+                                let ox = rect.left as f32 / scale;
+                                let oy = rect.top as f32 / scale;
+                                let ow = (rect.right - rect.left) as f32 / scale;
+                                let oh = (rect.bottom - rect.top) as f32 / scale;
+                                if screen.width() > ow && screen.height() > oh {
+                                    cfg.remember_pos_x = (ox / (screen.width() - ow) * 100.0).round().clamp(0.0, 100.0) as u32;
+                                    cfg.remember_pos_y = (oy / (screen.height() - oh) * 100.0).round().clamp(0.0, 100.0) as u32;
+                                }
+                            }
+                            let _ = cfg.save();
+                        }
+                        ui.label("记住窗口位置 (打开后保存当前位置)");
+                    });
                 }
             });
 
@@ -216,7 +261,8 @@ impl eframe::App for Ra2ClickerApp {
                         ui.label(egui::RichText::new(format!("v{}", env!("CARGO_PKG_VERSION"))).size(fs as f32));
                     });
                     ui.label(egui::RichText::new("借鉴 ra2-mouse-click 的 Rust 重写版").size(fs as f32));
-                    ui.label(egui::RichText::new("作者: cmixed  邮箱: cmixed@foxmail.com").size(fs as f32));
+                    ui.label(egui::RichText::new("作者: cmixed").size(fs as f32));
+                    ui.label(egui::RichText::new("邮箱: cmixed@foxmail.com").size(fs as f32));
                     ui.hyperlink_to("https://github.com/cmixed/ra2-clicker", "https://github.com/cmixed/ra2-clicker");
                     ui.add_space(4.0);
                     if ui.button("关闭").clicked() {
@@ -225,21 +271,13 @@ impl eframe::App for Ra2ClickerApp {
                 });
         }
 
-        if cfg.remember_position {
-            if let Some(outer) = ctx.input(|i| i.viewport().outer_rect) {
-                let (sw, sh) = screen_size();
-                let sw = sw as f32;
-                let sh = sh as f32;
-                let ow = outer.width();
-                let oh = outer.height();
-                if sw > ow && sh > oh {
-                    cfg.window_pos_x = (outer.min.x / (sw - ow) * 100.0).round().clamp(0.0, 100.0) as u32;
-                    cfg.window_pos_y = (outer.min.y / (sh - oh) * 100.0).round().clamp(0.0, 100.0) as u32;
-                }
-            }
+        if self.hwnd == 0 {
+            self.hwnd = unsafe { GetForegroundWindow() };
         }
 
-        let _ = cfg.save();
+        if ctx.input(|i| i.viewport().close_requested()) {
+            let _ = cfg.save();
+        }
         *shared.config.write().unwrap() = cfg;
     }
 }

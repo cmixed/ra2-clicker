@@ -1,4 +1,4 @@
-# ra2-clicker v1.4.0
+# ra2-clicker v1.4.1
 
 一款专为《命令与征服：红色警戒 2》设计的鼠标连点器。
 
@@ -7,6 +7,7 @@
 ## 特性
 
 - 原生 Windows API，纯 Rust，无 .NET / .NET Framework 依赖
+- 无需管理员权限运行
 - 深色/浅色主题一键切换，首次运行自动跟随系统
 - 可调字体大小 (10~24)，DPI 自适应
 - 可配置窗口位置百分比 (0~100)，支持记住拖拽位置
@@ -38,6 +39,11 @@ cargo build --release
 ## 许可
 
 MIT
+
+## 鸣谢
+
+- 原 [ra2-mouse-click](https://github.com/cmixed/ra2-mouse-click) 作者
+- [DeepSeek](https://chat.deepseek.com/) 辅助开发
 
 ## 作者
 

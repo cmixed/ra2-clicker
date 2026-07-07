@@ -26,7 +26,11 @@ fn main() -> eframe::Result<()> {
     let (iw, ih) = (340.0f32, 185.0f32);
     let (px, py) = {
         let c = _engine.shared.config.read().unwrap();
-        (c.window_pos_x.min(100).max(0) as f32, c.window_pos_y.min(100).max(0) as f32)
+        if c.remember_position {
+            (c.remember_pos_x.min(100).max(0) as f32, c.remember_pos_y.min(100).max(0) as f32)
+        } else {
+            (c.window_pos_x.min(100).max(0) as f32, c.window_pos_y.min(100).max(0) as f32)
+        }
     };
 
     let (ow, oh) = unsafe {
@@ -64,7 +68,6 @@ fn setup_fonts(ctx: &egui::Context) {
     for (path, name) in [
         (r"C:\Windows\Fonts\msyh.ttc", "chinese"),
         (r"C:\Windows\Fonts\seguisym.ttf", "symbol"),
-        (r"C:\Windows\Fonts\seguiemj.ttf", "emoji"),
     ] {
         if let Ok(data) = std::fs::read(path) {
             fonts
@@ -74,7 +77,7 @@ fn setup_fonts(ctx: &egui::Context) {
     }
     for family in &[egui::FontFamily::Proportional, egui::FontFamily::Monospace] {
         let list = fonts.families.entry(family.clone()).or_default();
-        for name in ["emoji", "symbol", "chinese"] {
+        for name in ["symbol", "chinese"] {
             if fonts.font_data.contains_key(name) && !list.contains(&name.to_string()) {
                 list.insert(0, name.to_string());
             }
