@@ -23,10 +23,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ra2-clicker-${{ github.ref_name }}
-          path: target/release/ra2-clicker-egui.exe
+          path: target/release/ra2-clicker.exe
 
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
-          files: target/release/ra2-clicker-egui.exe
+          files: target/release/ra2-clicker.exe
           generate_release_notes: true

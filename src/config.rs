@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-const HEADER: &str = r#"# ra2-clicker-egui 配置文件
+const HEADER: &str = r#"# ra2-clicker 配置文件
 # 保存后即刻生效，无需重启程序
 #
 # 连点设置
@@ -110,7 +110,7 @@ impl Config {
 
     pub fn path() -> PathBuf {
         let mut path = std::env::current_exe()
-            .unwrap_or_else(|_| PathBuf::from("ra2-clicker-egui"));
+            .unwrap_or_else(|_| PathBuf::from("ra2-clicker"));
         path.set_extension("toml");
         path
     }
