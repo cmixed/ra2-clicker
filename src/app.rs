@@ -1,4 +1,4 @@
-use crate::engine::{self, is_game_running, screen_size};
+use crate::engine::{self, is_game_running};
 use eframe::egui;
 use std::process::Command;
 use std::sync::atomic::Ordering;
@@ -9,7 +9,6 @@ pub struct Ra2ClickerApp {
     game_detected: bool,
     show_advanced: bool,
     current_h: f32,
-    positioned: bool,
 }
 
 impl Default for Ra2ClickerApp {
@@ -19,7 +18,6 @@ impl Default for Ra2ClickerApp {
             game_detected: false,
             show_advanced: false,
             current_h: 185.0,
-            positioned: false,
         }
     }
 }
@@ -28,24 +26,6 @@ impl eframe::App for Ra2ClickerApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         let shared = engine::shared();
         self.update_auto_detect(shared);
-
-        if !self.positioned {
-            self.positioned = true;
-            let cfg = shared.config.read().unwrap();
-            let px = cfg.window_pos_x;
-            let py = cfg.window_pos_y;
-            if px == 50 && py == 50 {
-                if let Some(cmd) = egui::ViewportCommand::center_on_screen(ctx) {
-                    ctx.send_viewport_cmd(cmd);
-                }
-            } else {
-                let (sw, sh) = screen_size();
-                let x = ((sw as f32 - 340.0) * px as f32 / 100.0).max(0.0);
-                let y = ((sh as f32 - 185.0) * py as f32 / 100.0).max(0.0);
-                ctx.send_viewport_cmd(egui::ViewportCommand::OuterPosition(egui::pos2(x, y)));
-            }
-            drop(cfg);
-        }
 
         let mut cfg = shared.config.read().unwrap().clone();
 
@@ -185,14 +165,24 @@ impl eframe::App for Ra2ClickerApp {
                             .text("点击间隔 (ms)")
                             .clamping(egui::SliderClamping::Always),
                     );
-                    ui.checkbox(
-                        &mut cfg.use_ra2_ol_style,
-                        "OL 风格 (按住热键 + 点击触发)",
-                    );
-                    ui.horizontal(|ui| {
-                        ui.add(egui::Checkbox::without_text(&mut cfg.enable_ra2_mode));
-                        ui.label("RA2 模式 (仅在建造栏区域连点)");
-                    });
+                    if ui
+                        .radio(
+                            cfg.use_ra2_ol_style,
+                            "OL 风格 (按住热键 + 点击触发)",
+                        )
+                        .clicked()
+                    {
+                        cfg.use_ra2_ol_style = !cfg.use_ra2_ol_style;
+                    }
+                    if ui
+                        .radio(
+                            cfg.enable_ra2_mode,
+                            "RA2 模式 (仅在建造栏区域连点)",
+                        )
+                        .clicked()
+                    {
+                        cfg.enable_ra2_mode = !cfg.enable_ra2_mode;
+                    }
                     if cfg.enable_ra2_mode {
                         ui.add(
                             egui::Slider::new(&mut cfg.construction_bar_width, 50..=500)

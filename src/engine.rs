@@ -182,7 +182,6 @@ const WM_SYSKEYUP: u32 = 0x0105;
 const WM_LBUTTONDOWN: u32 = 0x0201;
 const WM_RBUTTONDOWN: u32 = 0x0204;
 const SM_CXSCREEN: i32 = 0;
-const SM_CYSCREEN: i32 = 1;
 const TH32CS_SNAPPROCESS: u32 = 0x00000002;
 
 // ═══════════════════════════════════════════
@@ -348,10 +347,6 @@ unsafe fn send_click(right: bool) {
 // ═══════════════════════════════════════════
 // Process detection
 // ═══════════════════════════════════════════
-
-pub fn screen_size() -> (i32, i32) {
-    unsafe { (GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)) }
-}
 
 pub fn is_game_running() -> bool {
     let names = {

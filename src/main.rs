@@ -7,16 +7,45 @@ mod engine;
 use app::Ra2ClickerApp;
 use engine::Engine;
 
+#[link(name = "user32")]
+extern "system" {
+    fn GetSystemMetrics(nIndex: i32) -> i32;
+}
+
+const SM_CXSCREEN: i32 = 0;
+const SM_CYSCREEN: i32 = 1;
+const SM_CYCAPTION: i32 = 4;
+const SM_CXFIXEDFRAME: i32 = 7;
+
 fn main() -> eframe::Result<()> {
     let cfg = config::Config::load();
     let _engine = Engine::start(cfg);
 
     let title = format!("ra2-clicker v{}", env!("CARGO_PKG_VERSION"));
 
+    let (iw, ih) = (340.0f32, 185.0f32);
+    let (px, py) = {
+        let c = _engine.shared.config.read().unwrap();
+        (c.window_pos_x.min(100).max(0) as f32, c.window_pos_y.min(100).max(0) as f32)
+    };
+
+    let (ow, oh) = unsafe {
+        let bw = GetSystemMetrics(SM_CXFIXEDFRAME) as f32;
+        let cap = GetSystemMetrics(SM_CYCAPTION) as f32;
+        (iw + bw * 2.0, ih + cap + bw)
+    };
+
+    let (ox, oy) = unsafe {
+        let sw = GetSystemMetrics(SM_CXSCREEN) as f32;
+        let sh = GetSystemMetrics(SM_CYSCREEN) as f32;
+        (((sw - ow) * px / 100.0).max(0.0), ((sh - oh) * py / 100.0).max(0.0))
+    };
+
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_inner_size([340.0, 185.0])
-            .with_resizable(false),
+            .with_inner_size([iw, ih])
+            .with_resizable(false)
+            .with_position([ox, oy]),
         ..Default::default()
     };
 
