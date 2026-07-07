@@ -1,4 +1,4 @@
-# ra2-clicker v1.4.0
+# ra2-clicker v1.4.1
 
 一款专为《命令与征服：红色警戒 2》设计的鼠标连点器。
 
@@ -38,6 +38,11 @@ cargo build --release
 ## 许可
 
 MIT
+
+## 鸣谢
+
+- 原 [ra2-mouse-click](https://github.com/cmixed/ra2-mouse-click) 作者
+- [DeepSeek](https://chat.deepseek.com/) 辅助开发
 
 ## 作者
 
