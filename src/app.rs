@@ -9,6 +9,7 @@ pub struct Ra2ClickerApp {
     game_detected: bool,
     show_advanced: bool,
     current_h: f32,
+    show_about: bool,
 }
 
 impl Default for Ra2ClickerApp {
@@ -18,6 +19,7 @@ impl Default for Ra2ClickerApp {
             game_detected: false,
             show_advanced: false,
             current_h: 185.0,
+            show_about: false,
         }
     }
 }
@@ -115,6 +117,15 @@ impl eframe::App for Ra2ClickerApp {
                         if resp.clicked() {
                             cfg.dark_mode = !cfg.dark_mode;
                         }
+                        let about = ui
+                            .add(
+                                egui::Label::new(egui::RichText::new("\u{2139}").size(18.0))
+                                    .sense(egui::Sense::click()),
+                            )
+                            .on_hover_text("关于");
+                        if about.clicked() {
+                            self.show_about = true;
+                        }
                     });
                 });
 
@@ -192,6 +203,28 @@ impl eframe::App for Ra2ClickerApp {
                     }
                 }
             });
+
+        if self.show_about {
+            egui::Window::new("关于")
+                .collapsible(false)
+                .resizable(false)
+                .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+                .show(ctx, |ui| {
+                    ui.label(egui::RichText::new("ra2-clicker").strong().size(16.0));
+                    ui.label(format!("v{}", env!("CARGO_PKG_VERSION")));
+                    ui.add_space(8.0);
+                    ui.label("原 ra2-mouse-click 的 Rust 重写版");
+                    ui.label("专为红色警戒 2 设计的鼠标连点器");
+                    ui.add_space(8.0);
+                    ui.label("作者: cmixed");
+                    ui.label("邮箱: cmixed@foxmail.com");
+                    ui.hyperlink_to("https://github.com/cmixed/ra2-clicker", "GitHub 仓库");
+                    ui.add_space(8.0);
+                    if ui.button("关闭").clicked() {
+                        self.show_about = false;
+                    }
+                });
+        }
 
         if cfg.remember_position {
             if let Some(outer) = ctx.input(|i| i.viewport().outer_rect) {
