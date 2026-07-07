@@ -207,6 +207,7 @@ impl eframe::App for Ra2ClickerApp {
         if self.show_about {
             let fs = cfg.font_size + 2;
             egui::Window::new("关于")
+                .title_bar(false)
                 .collapsible(false)
                 .resizable(false)
                 .show(ctx, |ui| {
