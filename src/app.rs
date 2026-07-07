@@ -205,16 +205,17 @@ impl eframe::App for Ra2ClickerApp {
             });
 
         if self.show_about {
+            let fs = cfg.font_size + 2;
             egui::Window::new("关于")
                 .collapsible(false)
                 .resizable(false)
                 .show(ctx, |ui| {
                     ui.horizontal(|ui| {
-                        ui.label(egui::RichText::new("ra2-clicker").strong().size(14.0));
-                        ui.label(format!("v{}", env!("CARGO_PKG_VERSION")));
+                        ui.label(egui::RichText::new("ra2-clicker").strong().size(fs as f32));
+                        ui.label(egui::RichText::new(format!("v{}", env!("CARGO_PKG_VERSION"))).size(fs as f32));
                     });
-                    ui.label("借鉴 ra2-mouse-click 的 Rust 重写版");
-                    ui.label("作者: cmixed  邮箱: cmixed@foxmail.com");
+                    ui.label(egui::RichText::new("借鉴 ra2-mouse-click 的 Rust 重写版").size(fs as f32));
+                    ui.label(egui::RichText::new("作者: cmixed  邮箱: cmixed@foxmail.com").size(fs as f32));
                     ui.hyperlink_to("https://github.com/cmixed/ra2-clicker", "https://github.com/cmixed/ra2-clicker");
                     ui.add_space(4.0);
                     if ui.button("关闭").clicked() {
