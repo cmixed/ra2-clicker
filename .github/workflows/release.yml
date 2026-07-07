@@ -28,27 +28,11 @@ jobs:
       - name: Build release (${{ matrix.arch }})
         run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Install Inno Setup
-        run: choco install innosetup --no-progress -y
-
-      - name: Build installer (${{ matrix.arch }})
-        shell: pwsh
-        run: |
-          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\iscc.exe"
-          & $iscc installer.iss "/dMyAppVersion=${{ github.ref_name }}" "/dArch=${{ matrix.arch }}" "/dExeSource=target\${{ matrix.target }}\release\ra2-clicker.exe"
-        working-directory: ${{ github.workspace }}
-
-      - name: Upload exe
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ra2-clicker-${{ github.ref_name }}-${{ matrix.arch }}
           path: target/${{ matrix.target }}/release/ra2-clicker.exe
-
-      - name: Upload installer
-        uses: actions/upload-artifact@v4
-        with:
-          name: ra2-clicker-${{ github.ref_name }}-${{ matrix.arch }}-setup
-          path: ra2-clicker-${{ github.ref_name }}-${{ matrix.arch }}-setup.exe
 
   create-release:
     needs: build
