@@ -31,6 +31,8 @@ const HEADER: &str = r#"# ra2-clicker 配置文件
 # 外观
 # dark_mode           = 深色模式 (true=深色, false=浅色)
 # font_size           = 字体大小 (10~24)
+# window_pos_x        = 窗口水平位置百分比 (0=最左, 50=居中, 100=最右)
+# window_pos_y        = 窗口垂直位置百分比 (0=最顶, 50=居中, 100=最底)
 
 "#;
 
@@ -51,6 +53,8 @@ pub struct Config {
     pub game_process_list: Vec<String>,
     pub dark_mode: bool,
     pub font_size: u32,
+    pub window_pos_x: u32,
+    pub window_pos_y: u32,
 }
 
 impl Default for Config {
@@ -77,6 +81,8 @@ impl Default for Config {
             ],
             dark_mode: true,
             font_size: 15,
+            window_pos_x: 50,
+            window_pos_y: 50,
         }
     }
 }

@@ -1,4 +1,4 @@
-use crate::engine::{self, is_game_running};
+use crate::engine::{self, is_game_running, screen_size};
 use eframe::egui;
 use std::process::Command;
 use std::sync::atomic::Ordering;
@@ -9,6 +9,7 @@ pub struct Ra2ClickerApp {
     game_detected: bool,
     show_advanced: bool,
     current_h: f32,
+    positioned: bool,
 }
 
 impl Default for Ra2ClickerApp {
@@ -18,6 +19,7 @@ impl Default for Ra2ClickerApp {
             game_detected: false,
             show_advanced: false,
             current_h: 185.0,
+            positioned: false,
         }
     }
 }
@@ -26,6 +28,20 @@ impl eframe::App for Ra2ClickerApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         let shared = engine::shared();
         self.update_auto_detect(shared);
+
+        if !self.positioned {
+            self.positioned = true;
+            let cfg = shared.config.read().unwrap();
+            let px = cfg.window_pos_x.min(100).max(0) as f32;
+            let py = cfg.window_pos_y.min(100).max(0) as f32;
+            let ww = 340.0;
+            let wh = self.current_h;
+            let (sw, sh) = screen_size();
+            let x = ((sw as f32 - ww) * px / 100.0).max(0.0);
+            let y = ((sh as f32 - wh) * py / 100.0).max(0.0);
+            drop(cfg);
+            ctx.send_viewport_cmd(egui::ViewportCommand::OuterPosition(egui::pos2(x, y)));
+        }
 
         let mut cfg = shared.config.read().unwrap().clone();
 

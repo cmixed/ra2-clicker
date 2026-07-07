@@ -7,19 +7,56 @@ mod engine;
 use app::Ra2ClickerApp;
 use engine::Engine;
 
+#[link(name = "kernel32")]
+extern "system" {
+    fn FreeConsole() -> i32;
+}
+
+#[link(name = "user32")]
+extern "system" {
+    fn GetConsoleWindow() -> isize;
+    fn ShowWindow(hWnd: isize, nCmdShow: i32) -> i32;
+    fn GetSystemMetrics(nIndex: i32) -> i32;
+}
+
+const SW_HIDE: i32 = 0;
+const SM_CXSCREEN: i32 = 0;
+const SM_CYSCREEN: i32 = 1;
+
 fn main() -> eframe::Result<()> {
+    unsafe {
+        FreeConsole();
+        ShowWindow(GetConsoleWindow(), SW_HIDE);
+    }
+
     let cfg = config::Config::load();
     let _engine = Engine::start(cfg);
 
+    let title = format!("ra2-clicker v{}", env!("CARGO_PKG_VERSION"));
+
+    let (ww, wh) = (340.0f32, 185.0f32);
+
+    let (init_x, init_y) = {
+        let cfg = _engine.shared.config.read().unwrap();
+        let px = cfg.window_pos_x.min(100).max(0) as f32;
+        let py = cfg.window_pos_y.min(100).max(0) as f32;
+        let sw = unsafe { GetSystemMetrics(SM_CXSCREEN) as f32 };
+        let sh = unsafe { GetSystemMetrics(SM_CYSCREEN) as f32 };
+        let x = ((sw - ww) * px / 100.0).max(0.0);
+        let y = ((sh - wh) * py / 100.0).max(0.0);
+        (x, y)
+    };
+
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_inner_size([340.0, 185.0])
-            .with_resizable(false),
+            .with_inner_size([ww, wh])
+            .with_resizable(false)
+            .with_position([init_x, init_y]),
         ..Default::default()
     };
 
     eframe::run_native(
-        "ra2-clicker",
+        &title,
         options,
         Box::new(|cc| {
             setup_fonts(&cc.egui_ctx);
