@@ -193,6 +193,7 @@ impl eframe::App for Ra2ClickerApp {
                 }
             });
 
+        let _ = cfg.save();
         *shared.config.write().unwrap() = cfg;
     }
 }
@@ -242,8 +243,8 @@ fn radio_row(ui: &mut egui::Ui, selected: &mut u32) {
         let h = 22.0;
         for (code, label) in [
             (0xA0u32, "Shift连点"),
-            (0xA2u32, "Alt连点"),
-            (0xA4u32, "Ctrl连点"),
+            (0xA2u32, "Ctrl连点"),
+            (0xA4u32, "Alt连点"),
         ] {
             let (r, _) = ui.allocate_exact_size(egui::vec2(col, h), egui::Sense::hover());
             let mut c = ui.new_child(egui::UiBuilder::new().max_rect(r).layout(egui::Layout::left_to_right(egui::Align::Center)));
