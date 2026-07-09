@@ -5,7 +5,7 @@
 ## 设计
 
 - **输入 API** — `SendInput` 一次性下发 DOWN+UP，管理员权限绕过 UIPI
-- **全局钩子** — `WH_KEYBOARD_LL` / `WH_MOUSE_LL` 系统级低权限钩子
+- **钩子** — `WH_KEYBOARD_LL` / `WH_MOUSE_LL` 全局低级钩子
 - **渲染** — Slint 软件渲染，内存占用不到 4MB
 
 ## 功能
