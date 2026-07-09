@@ -129,7 +129,7 @@ export component AppWindow inherits Window {
     callback toggle-dark-mode();
     callback open-about();
     callback close-about();
-    callback open-homepage();
+    callback copy-repo-url();
 
     callback click-counts-changed(int);
     callback click-interval-changed(int);
@@ -283,13 +283,13 @@ export component AppWindow inherits Window {
             alignment: center;
 
             Text { text: "ra2-clicker v" + app-version; font-size: 16px; font-weight: 700; color: txt; vertical-alignment: center; }
-            Text { text: "借鉴 ra2-mouse-click 的 Rust 重写版"; font-size: 13px; color: dim; vertical-alignment: center; }
+            Text { text: "借鉴 ra2-mouse-click 的 Rust 重写版"; font-size: 13px; color: txt; vertical-alignment: center; }
             Text { text: "作者: cmixed"; font-size: 13px; color: txt; vertical-alignment: center; }
             Rectangle {
-                width: 100%;
-                height: 20px;
-                Text { text: "主页: gitee.com/cmixed/ra2-clicker"; font-size: 13px; color: toggle-on; horizontal-alignment: center; vertical-alignment: center; }
-                TouchArea { clicked => { open-homepage(); } }
+                HorizontalLayout { alignment: center;
+                    Text { text: "主页: gitee.com/cmixed/ra2-clicker（点击复制）"; font-size: 13px; color: toggle-on; }
+                }
+                TouchArea { clicked => { copy-repo-url(); } }
             }
 
             Rectangle { height: 12px; background: transparent; }

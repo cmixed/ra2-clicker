@@ -31,6 +31,21 @@ extern "system" {
     fn GetSystemMetrics(n_index: i32) -> i32;
 }
 
+#[link(name = "user32")]
+extern "system" {
+    fn OpenClipboard(h_wnd_new_owner: isize) -> i32;
+    fn EmptyClipboard() -> i32;
+    fn SetClipboardData(u_format: u32, h_mem: isize) -> isize;
+    fn CloseClipboard() -> i32;
+}
+
+#[link(name = "kernel32")]
+extern "system" {
+    fn GlobalAlloc(u_flags: u32, dw_bytes: usize) -> isize;
+    fn GlobalLock(h_mem: isize) -> *mut std::ffi::c_void;
+    fn GlobalUnlock(h_mem: isize) -> i32;
+}
+
 fn set_title_bar_dark_mode(dark: bool) {
     let title: Vec<u16> = OsStr::new(&format!("ra2-clicker v{}", env!("CARGO_PKG_VERSION")))
         .encode_wide()
@@ -43,6 +58,23 @@ fn set_title_bar_dark_mode(dark: bool) {
     let mode: u32 = if dark { 1 } else { 0 };
     unsafe {
         DwmSetWindowAttribute(hwnd, 20, &mode as *const u32, std::mem::size_of::<u32>() as u32);
+    }
+}
+
+fn copy_to_clipboard(text: &str) {
+    let bytes = text.as_bytes();
+    unsafe {
+        let h_mem = GlobalAlloc(0x0002, bytes.len() + 1);
+        if h_mem == 0 { return; }
+        let ptr = GlobalLock(h_mem) as *mut u8;
+        if ptr.is_null() { return; }
+        std::ptr::copy_nonoverlapping(bytes.as_ptr(), ptr, bytes.len());
+        *ptr.add(bytes.len()) = 0;
+        GlobalUnlock(h_mem);
+        OpenClipboard(0);
+        EmptyClipboard();
+        SetClipboardData(1, h_mem);
+        CloseClipboard();
     }
 }
 
@@ -284,10 +316,8 @@ fn connect_callbacks(ui: &AppWindow, shared: &Arc<engine::SharedState>) {
         }
     });
 
-    ui.on_open_homepage(move || {
-        let _ = std::process::Command::new("cmd")
-            .args(["/c", "start", "https://gitee.com/cmixed/ra2-clicker"])
-            .spawn();
+    ui.on_copy_repo_url(move || {
+        copy_to_clipboard("https://gitee.com/cmixed/ra2-clicker");
     });
 }
 
