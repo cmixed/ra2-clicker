@@ -1,5 +1,5 @@
 use crate::config::Config;
-use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicI32, AtomicU32, Ordering};
 use std::sync::{Arc, OnceLock, RwLock};
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
@@ -11,6 +11,8 @@ pub struct SharedState {
     pub is_clicking: AtomicBool,
     pub hotkey_down: AtomicBool,
     pub hook_tid: AtomicU32,
+    pub window_x: AtomicI32,
+    pub window_y: AtomicI32,
 }
 
 impl SharedState {
@@ -20,6 +22,8 @@ impl SharedState {
             is_clicking: AtomicBool::new(false),
             hotkey_down: AtomicBool::new(false),
             hook_tid: AtomicU32::new(0),
+            window_x: AtomicI32::new(i32::MAX),
+            window_y: AtomicI32::new(i32::MAX),
         }
     }
 }
@@ -38,6 +42,7 @@ impl Engine {
         let shared_clone = shared.clone();
         let handle = thread::Builder::new()
             .name("hook-thread".into())
+            .stack_size(256 * 1024)
             .spawn(move || unsafe { hook_thread(shared_clone) })
             .expect("Failed to spawn hook thread");
 
@@ -46,10 +51,6 @@ impl Engine {
             handle: Some(handle),
         }
     }
-}
-
-pub fn shared() -> &'static Arc<SharedState> {
-    SHARED.get().expect("Engine not initialized")
 }
 
 // ═══════════════════════════════════════════
@@ -315,6 +316,7 @@ fn trigger_clicks(shared: &Arc<SharedState>, is_right: bool) {
     let shared = Arc::clone(shared);
     thread::Builder::new()
         .name("click-thread".into())
+        .stack_size(128 * 1024)
         .spawn(move || {
             for _ in 0..count {
                 if !shared.is_clicking.load(Ordering::Relaxed) {

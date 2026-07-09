@@ -1,3 +1,6 @@
 /target
 ra2-clicker.toml
 ra2-clicker-egui/
+ra2-mouse-click/
+debug_*.txt
+ra2-clicker.parse_err.txt

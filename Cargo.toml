@@ -1,13 +1,17 @@
 [package]
 name = "ra2-clicker"
-version = "1.4.1"
+version = "2.0.0"
 edition = "2021"
 
 [dependencies]
-eframe = "0.31"
-egui = "0.31"
+slint = { version = "1.9", default-features = false, features = ["backend-winit", "renderer-software", "compat-1-2"] }
 serde = { version = "1", features = ["derive"] }
 toml = "0.8"
+mimalloc = "0.1"
+
+[build-dependencies]
+slint-build = "1.9"
+winresource = "0.1"
 
 [profile.release]
 opt-level = "z"

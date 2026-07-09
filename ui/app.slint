@@ -1,0 +1,299 @@
+import { Slider } from "std-widgets.slint";
+
+component ToggleSwitch inherits Rectangle {
+    callback toggled();
+    in-out property <bool> checked;
+    in-out property <color> on-color: #286E32;
+    in-out property <color> off-color: #888;
+
+    height: 22px;
+    width: 44px;
+    border-radius: 11px;
+    background: checked ? on-color : off-color;
+    animate background { duration: 100ms; }
+
+    knob := Rectangle {
+        width: 18px;
+        height: 18px;
+        border-radius: 9px;
+        background: white;
+        x: checked ? parent.width - self.width - 3px : 3px;
+        y: 2px;
+        animate x { duration: 100ms; }
+    }
+
+    touch := TouchArea {
+        clicked => { checked = !checked; toggled(); }
+    }
+}
+
+component ThemedButton inherits Rectangle {
+    callback clicked();
+    in-out property <string> text;
+    in-out property <color> text-color;
+    in-out property <color> bg-color;
+
+    min-width: 60px;
+    height: 26px;
+    border-radius: 4px;
+    background: bg-color;
+
+    Text { text: text; color: text-color; font-size: 13px; }
+
+    touch := TouchArea {
+        clicked => { clicked(); }
+    }
+}
+
+component ThemedCheckBox inherits Rectangle {
+    callback toggled();
+    in-out property <string> text;
+    in-out property <bool> checked;
+    in-out property <color> text-color;
+    in-out property <color> bg;
+
+    background: transparent;
+    height: 22px;
+
+    HorizontalLayout {
+        spacing: 4px;
+
+        Rectangle {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            border-width: 2px;
+            border-color: text-color;
+            background: checked ? text-color : transparent;
+
+            if (checked) : Text {
+                text: "X";
+                color: bg;
+                font-size: 11px;
+                font-weight: 700;
+                width: 100%;
+                height: 100%;
+                horizontal-alignment: center;
+            }
+        }
+
+        Text { text: text; color: text-color; font-size: 13px; }
+    }
+
+    TouchArea {
+        clicked => { toggled(); }
+    }
+}
+
+export component AppWindow inherits Window {
+    title: "ra2-clicker v" + app-version;
+    icon: @image-url("icon.png");
+    width: 340px;
+    height: show-advanced ? 380px : 188px;
+
+    in-out property <bool> is-clicking;
+    in-out property <bool> game-detected;
+    in-out property <bool> click-on;
+    in-out property <bool> auto-detect-mode;
+    in-out property <int> click-counts: 5;
+    in-out property <bool> left-click: true;
+    in-out property <bool> right-click;
+    in-out property <int> hotkey-code: 160;
+    in-out property <bool> show-advanced;
+    in-out property <bool> use-ra2-ol-style: true;
+    in-out property <bool> enable-ra2-mode: true;
+    in-out property <int> click-interval-ms: 10;
+    in-out property <int> construction-bar-width: 160;
+    in-out property <bool> dark-mode: true;
+    in-out property <bool> remember-position: true;
+    in-out property <string> app-version: "2.0";
+
+    in-out property <color> bg: dark-mode ? #1e1e1e : #ebecf0;
+    in-out property <color> txt: dark-mode ? #ccc : #222;
+    in-out property <color> toggle-on: dark-mode ? #286E32 : #237d32;
+    in-out property <color> toggle-off: dark-mode ? #555 : #aaa;
+    in-out property <color> dim: dark-mode ? #777 : #999;
+    in-out property <color> btn-bg: dark-mode ? #444 : #ccc;
+    in-out property <color> slider-track: dark-mode ? #444 : #bbb;
+
+    callback toggle-click-on();
+    callback toggle-auto-detect();
+    callback toggle-left-click();
+    callback toggle-right-click();
+    callback toggle-hotkey(int);
+    callback toggle-advanced();
+    callback toggle-ol-style();
+    callback toggle-ra2-mode();
+    callback toggle-remember-position();
+    callback edit-config();
+    callback toggle-dark-mode();
+    callback open-about();
+    callback close-about();
+    callback open-homepage();
+
+    callback click-counts-changed(int);
+    callback click-interval-changed(int);
+    callback construction-bar-width-changed(int);
+
+    background: bg;
+
+    VerticalLayout {
+        padding: 8px;
+        spacing: 6px;
+        alignment: start;
+
+        // Status bar
+        HorizontalLayout { spacing: 6px;
+            Rectangle {
+                width: 12px; height: 12px; border-radius: 6px;
+                background: is-clicking ? yellow : (click-on ? #00cc00 : dim);
+            }
+            Text {
+                text: is-clicking ? " 连点中" : (click-on ? " 已就绪" : " 已暂停");
+                color: txt; font-size: 13px;
+            }
+
+            if (auto-detect-mode) : Rectangle {
+                width: 12px; height: 12px; border-radius: 6px;
+                background: game-detected ? #00cc00 : dim;
+            }
+            if (auto-detect-mode) : Text {
+                text: game-detected ? " 运行中" : " 未检测到";
+                color: txt; font-size: 13px;
+            }
+
+            Rectangle { }
+
+            Rectangle {
+                width: 22px; height: 22px; border-radius: 4px;
+                background: btn-bg;
+                Rectangle {
+                    width: 14px; height: 14px; border-radius: 7px;
+                    background: dark-mode ? #f0c040 : transparent;
+                    border-width: dark-mode ? 0px : 2px;
+                    border-color: txt;
+                    x: 4px; y: 4px;
+                }
+                TouchArea { clicked => { toggle-dark-mode(); } }
+            }
+
+            Rectangle {
+                width: 22px; height: 22px; border-radius: 4px;
+                background: btn-bg;
+                Text {
+                    text: "!"; color: txt; font-size: 14px; font-weight: 700;
+                }
+                TouchArea { clicked => { open-about(); } }
+            }
+        }
+
+        // Auto detect | Click on
+        HorizontalLayout { spacing: 8px;
+            HorizontalLayout { spacing: 4px;
+                ToggleSwitch { checked: auto-detect-mode; on-color: toggle-on; off-color: toggle-off; toggled => { toggle-auto-detect(); } }
+                Text { text: "自动检测进程"; color: txt; font-size: 13px; }
+            }
+            HorizontalLayout { spacing: 4px;
+                ToggleSwitch { checked: click-on; on-color: toggle-on; off-color: toggle-off; toggled => { toggle-click-on(); } }
+                Text { text: "连点开关"; color: txt; font-size: 13px; }
+            }
+        }
+
+        // Click count slider
+        HorizontalLayout { spacing: 8px;
+            Text { text: "连点次数"; color: txt; font-size: 13px; vertical-alignment: center; }
+            Text { text: click-counts; color: txt; font-size: 13px; vertical-alignment: center; min-width: 24px; horizontal-alignment: center; }
+            Slider { minimum: 0; maximum: 30; height: 24px; value: click-counts; changed(v) => { click-counts = v; click-counts-changed(v); } }
+        }
+
+        // Left click | Right click
+        HorizontalLayout { spacing: 8px;
+            HorizontalLayout { spacing: 4px;
+                ToggleSwitch { checked: left-click; on-color: toggle-on; off-color: toggle-off; toggled => { toggle-left-click(); } }
+                Text { text: "左键连点"; color: txt; font-size: 13px; }
+            }
+            HorizontalLayout { spacing: 4px;
+                ToggleSwitch { checked: right-click; on-color: toggle-on; off-color: toggle-off; toggled => { toggle-right-click(); } }
+                Text { text: "右键连点"; color: txt; font-size: 13px; }
+            }
+        }
+
+        // Hotkey
+        HorizontalLayout { spacing: 4px;
+            ThemedCheckBox { text: "Shift连点"; checked: hotkey-code == 160; text-color: txt; bg: bg; toggled => { toggle-hotkey(160); } }
+            ThemedCheckBox { text: "Ctrl连点"; checked: hotkey-code == 162; text-color: txt; bg: bg; toggled => { toggle-hotkey(162); } }
+            ThemedCheckBox { text: "Alt连点"; checked: hotkey-code == 164; text-color: txt; bg: bg; toggled => { toggle-hotkey(164); } }
+        }
+
+        // Bottom buttons
+        HorizontalLayout { spacing: 8px;
+            ThemedButton { text: "编辑配置文件"; text-color: txt; bg-color: btn-bg; clicked => { edit-config(); } }
+            Rectangle { }
+            ThemedButton { text: "更多设置"; text-color: txt; bg-color: btn-bg; clicked => { toggle-advanced(); } }
+        }
+
+        // ── Advanced Section ──
+        if (show-advanced) : Rectangle { height: 1px; background: dim; }
+        if (show-advanced) : Rectangle { height: 4px; background: transparent; }
+        if (show-advanced) : Text { text: "高级设置"; color: txt; font-size: 14px; font-weight: 700; }
+
+        if (show-advanced) : HorizontalLayout { spacing: 8px;
+            Text { text: "点击间隔 (ms)"; color: txt; font-size: 13px; vertical-alignment: center; }
+            Text { text: click-interval-ms; color: txt; font-size: 13px; vertical-alignment: center; min-width: 40px; horizontal-alignment: center; }
+            Slider { minimum: 1; maximum: 200; height: 24px; value: click-interval-ms; changed(v) => { click-interval-ms = v; click-interval-changed(v); } }
+        }
+
+        if (show-advanced) : ThemedCheckBox {
+            text: "OL 风格 (按住热键 + 点击触发)";
+            checked: use-ra2-ol-style;
+            text-color: txt; bg: bg;
+            toggled => { toggle-ol-style(); }
+        }
+
+        if (show-advanced) : ThemedCheckBox {
+            text: "RA2 模式 (仅在建造栏区域连点)";
+            checked: enable-ra2-mode;
+            text-color: txt; bg: bg;
+            toggled => { toggle-ra2-mode(); }
+        }
+
+        if (show-advanced) : ThemedCheckBox {
+            text: "退出时记录窗口位置";
+            checked: remember-position;
+            text-color: txt; bg: bg;
+            toggled => { toggle-remember-position(); }
+        }
+
+        if (show-advanced && enable-ra2-mode) : HorizontalLayout { spacing: 8px;
+            Text { text: "建造栏宽度 (px)"; color: txt; font-size: 13px; vertical-alignment: center; }
+            Text { text: construction-bar-width; color: txt; font-size: 13px; vertical-alignment: center; min-width: 24px; horizontal-alignment: center; }
+            Slider { minimum: 50; maximum: 500; height: 24px; value: construction-bar-width; changed(v) => { construction-bar-width = v; construction-bar-width-changed(v); } }
+        }
+    }
+
+    in-out property <bool> show-about;
+
+    if (show-about) : Rectangle {
+        x: 0; y: 0; width: 100%; height: 100%;
+        background: bg;
+
+        VerticalLayout {
+            padding: 24px;
+            spacing: 8px;
+            alignment: center;
+
+            Text { text: "ra2-clicker v" + app-version; font-size: 16px; font-weight: 700; color: txt; vertical-alignment: center; }
+            Text { text: "借鉴 ra2-mouse-click 的 Rust 重写版"; font-size: 13px; color: dim; vertical-alignment: center; }
+            Text { text: "作者: cmixed"; font-size: 13px; color: txt; vertical-alignment: center; }
+            Text { text: "主页: gitee.com/cmixed/ra2-clicker"; font-size: 13px; color: dim; vertical-alignment: center; }
+            HorizontalLayout { alignment: center;
+                Text { text: "点击跳转"; font-size: 12px; color: toggle-on; }
+                TouchArea { clicked => { open-homepage(); } }
+            }
+
+            Rectangle { height: 12px; background: transparent; }
+
+            ThemedButton { text: "关闭"; text-color: txt; bg-color: btn-bg; clicked => { close-about(); } }
+        }
+    }
+}

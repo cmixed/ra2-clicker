@@ -2,53 +2,45 @@ name: Release
 
 on:
   push:
-    tags:
-      - "v*"
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
 
 jobs:
   build:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - target: x86_64-pc-windows-msvc
-            arch: x86_64
-          - target: i686-pc-windows-msvc
-            arch: x86
     runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: stable
-          target: ${{ matrix.target }}
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
 
-      - name: Build release (${{ matrix.arch }})
-        run: cargo build --release --target ${{ matrix.target }}
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build release
+        run: cargo build --release
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ra2-clicker-${{ github.ref_name }}-${{ matrix.arch }}
-          path: target/${{ matrix.target }}/release/ra2-clicker.exe
+          name: ra2-clicker
+          path: target/release/ra2-clicker.exe
 
-  create-release:
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
     needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    runs-on: windows-latest
 
     steps:
-      - uses: actions/download-artifact@v4
+      - name: Download artifact
+        uses: actions/download-artifact@v4
         with:
-          pattern: ra2-clicker-${{ github.ref_name }}-*
-          merge-multiple: true
+          name: ra2-clicker
 
-      - name: Create release
+      - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            ra2-clicker-*.exe
+          files: ra2-clicker.exe
           generate_release_notes: true

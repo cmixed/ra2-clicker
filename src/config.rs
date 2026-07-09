@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::os::windows::process::CommandExt;
 use std::path::PathBuf;
 
 const HEADER: &str = r#"# ra2-clicker 配置文件
@@ -29,11 +28,9 @@ const HEADER: &str = r#"# ra2-clicker 配置文件
 # ── 外观 ──
 # dark_mode           = 深色模式 (true=深色, false=浅色)
 # font_size           = 字体大小 (10~24)
-# window_pos_x        = 窗口水平位置 (%)，50=居中
-# window_pos_y        = 窗口垂直位置 (%)，50=居中
-# remember_position   = 记住位置开关 (true=使用下面记住的位置)
-# remember_pos_x      = 记住的水平位置 (%)，点击开关时自动保存
-# remember_pos_y      = 记住的垂直位置 (%)，点击开关时自动保存
+# window_pos_x        = 窗口水平位置 (像素)，留空=居中
+# window_pos_y        = 窗口垂直位置 (像素)，留空=居中
+# remember_position   = 退出时保存窗口位置 (true=启用)
 
 "#;
 
@@ -73,8 +70,6 @@ pub struct Config {
     pub window_pos_x: u32,
     pub window_pos_y: u32,
     pub remember_position: bool,
-    pub remember_pos_x: u32,
-    pub remember_pos_y: u32,
 }
 
 fn default_hotkey() -> String {
@@ -100,7 +95,7 @@ impl Default for Config {
             construction_bar_width: 160,
             screen_width: 0,
             auto_detect_mode: true,
-            auto_detect_interval_ms: 10000,
+            auto_detect_interval_ms: 3000,
             game_process_list: vec![
                 "gamemd".into(),
                 "game".into(),
@@ -110,11 +105,9 @@ impl Default for Config {
             ],
             dark_mode: true,
             font_size: 15,
-            window_pos_x: 50,
-            window_pos_y: 50,
-            remember_position: false,
-            remember_pos_x: 50,
-            remember_pos_y: 50,
+            window_pos_x: u32::MAX,
+            window_pos_y: u32::MAX,
+            remember_position: true,
         };
         s.sync_from_hotkey();
         s
@@ -124,6 +117,7 @@ impl Default for Config {
 impl Config {
     pub fn sync_from_hotkey(&mut self) {
         self.hotkey_code = match self.hotkey.as_str() {
+            "none" => 0,
             "shift" => HOTKEY_SHIFT,
             "ctrl" => HOTKEY_CTRL,
             "alt" => HOTKEY_ALT,
@@ -133,6 +127,7 @@ impl Config {
 
     pub fn sync_from_code(&mut self) {
         self.hotkey = match self.hotkey_code {
+            0 => "none",
             HOTKEY_SHIFT => "shift",
             HOTKEY_CTRL => "ctrl",
             HOTKEY_ALT => "alt",
@@ -145,21 +140,21 @@ impl Config {
         let path = Self::path();
         if path.exists() {
             if let Ok(content) = std::fs::read_to_string(&path) {
-                let toml_part = if let Some(pos) =
-                    content.find(|c: char| c != '#' && c != ' ' && c != '\n' && c != '\r')
-                {
-                    &content[pos..]
-                } else {
-                    &content
-                };
-                if let Ok(mut config) = toml::from_str::<Self>(toml_part) {
+                let content = content.trim_start_matches('\u{FEFF}');
+                let toml_part: String = content.lines()
+                    .skip_while(|line| {
+                        let t = line.trim();
+                        t.is_empty() || t.starts_with('#')
+                    })
+                    .collect::<Vec<_>>()
+                    .join("\n");
+                if let Ok(mut config) = toml::from_str::<Self>(&toml_part) {
                     config.sync_from_hotkey();
                     return config;
                 }
             }
         }
-        let mut config = Config::default();
-        config.dark_mode = system_is_dark_mode();
+        let config = Config::default();
         let _ = config.save();
         config
     }
@@ -181,25 +176,7 @@ impl Config {
     }
 }
 
-fn system_is_dark_mode() -> bool {
-    const CREATE_NO_WINDOW: u32 = 0x08000000;
-    let out = std::process::Command::new("reg")
-        .creation_flags(CREATE_NO_WINDOW)
-        .args([
-            "query",
-            r"HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
-            "/v",
-            "AppsUseLightTheme",
-        ])
-        .output();
-    match out {
-        Ok(output) if output.status.success() => {
-            let s = String::from_utf8_lossy(&output.stdout);
-            !s.contains("0x1")
-        }
-        _ => true,
-    }
-}
+
 
 mod hotkey_deser {
     use serde::de;
@@ -220,15 +197,16 @@ mod hotkey_deser {
                 Ok(v.to_lowercase())
             }
 
-            fn visit_u64<E: de::Error>(self, v: u64) -> Result<String, E> {
-                Ok(match v {
-                    160 => "shift",
-                    162 => "ctrl",
-                    164 => "alt",
-                    _ => return Err(de::Error::custom("invalid hotkey code")),
-                }
-                .into())
-            }
+                    fn visit_u64<E: de::Error>(self, v: u64) -> Result<String, E> {
+                        Ok(match v {
+                            0 => "none",
+                            160 => "shift",
+                            162 => "ctrl",
+                            164 => "alt",
+                            _ => return Err(de::Error::custom("invalid hotkey code")),
+                        }
+                        .into())
+                    }
         }
         deserializer.deserialize_any(V)
     }
