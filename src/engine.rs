@@ -95,17 +95,6 @@ struct MSLLHOOKSTRUCT {
 }
 
 #[repr(C)]
-struct INPUT {
-    type_: u32,
-    u: INPUT_0,
-}
-
-#[repr(C)]
-union INPUT_0 {
-    mi: MOUSEINPUT,
-}
-
-#[repr(C)]
 #[derive(Clone, Copy)]
 struct MOUSEINPUT {
     dx: i32,
@@ -114,6 +103,17 @@ struct MOUSEINPUT {
     dw_flags: u32,
     time: u32,
     dw_extra_info: usize,
+}
+
+#[repr(C)]
+union INPUT_0 {
+    mi: MOUSEINPUT,
+}
+
+#[repr(C)]
+struct INPUT {
+    type_: u32,
+    u: INPUT_0,
 }
 
 impl INPUT {
@@ -340,10 +340,8 @@ unsafe fn send_click(right: bool) {
     const UP_R: u32 = 0x0010;
 
     let (down, up) = if right { (DOWN_R, UP_R) } else { (DOWN_L, UP_L) };
-    let d = INPUT::mouse(down);
-    let u = INPUT::mouse(up);
-    SendInput(1, std::ptr::addr_of!(d), std::mem::size_of::<INPUT>() as i32);
-    SendInput(1, std::ptr::addr_of!(u), std::mem::size_of::<INPUT>() as i32);
+    let inputs = [INPUT::mouse(down), INPUT::mouse(up)];
+    SendInput(2, inputs.as_ptr(), std::mem::size_of::<INPUT>() as i32);
 }
 
 // ═══════════════════════════════════════════
@@ -372,7 +370,7 @@ pub fn is_game_running() -> bool {
         loop {
             let name = String::from_utf16_lossy(&entry.sz_exe_file);
             let name = name.trim_end_matches('\0');
-            let stem = name.rsplit('.').next().unwrap_or(name);
+            let stem = name.split('.').next().unwrap_or(name);
             if names.iter().any(|n| n == stem || n == name) {
                 CloseHandle(snap);
                 return true;
