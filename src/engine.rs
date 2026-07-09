@@ -220,8 +220,8 @@ unsafe extern "system" fn keyboard_proc(code: i32, w_param: usize, l_param: isiz
 }
 
 unsafe extern "system" fn mouse_proc(code: i32, w_param: usize, l_param: isize) -> isize {
-    if code >= 0 {
-        on_mouse(w_param as u32, l_param);
+    if code >= 0 && on_mouse(w_param as u32, l_param) {
+        return 1;
     }
     CallNextHookEx(0, code, w_param, l_param)
 }
@@ -254,33 +254,34 @@ unsafe fn on_keyboard(msg: u32, l_param: isize) {
     }
 }
 
-unsafe fn on_mouse(msg: u32, l_param: isize) {
+unsafe fn on_mouse(msg: u32, l_param: isize) -> bool {
     let is_right = match msg {
         WM_LBUTTONDOWN => false,
         WM_RBUTTONDOWN => true,
-        _ => return,
+        _ => return false,
     };
     let ms = *(l_param as *const MSLLHOOKSTRUCT);
     if ms.flags & 0x10 != 0 {
-        return;
+        return false;
     }
 
     let shared = SHARED.get().unwrap();
     if !shared.hotkey_down.load(Ordering::Relaxed) || shared.is_clicking.load(Ordering::Relaxed) {
-        return;
+        return false;
     }
 
     let cfg = shared.config.read().unwrap();
     if !cfg.click_on || !cfg.use_ra2_ol_style {
-        return;
+        return false;
     }
     let allowed = if is_right { cfg.right_click } else { cfg.left_click };
     drop(cfg);
 
     if !allowed || cursor_out_of_bounds(shared) {
-        return;
+        return false;
     }
     trigger_clicks(shared, is_right);
+    true
 }
 
 fn cursor_out_of_bounds(shared: &SharedState) -> bool {
