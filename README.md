@@ -23,7 +23,7 @@
 
 ## 下载
 
-从 [Releases](https://github.com/cmixed/ra2-clicker/releases) 下载最新版本的 `ra2-clicker.exe`，直接运行即可。
+从 [Releases](https://github.com/cmixed/ra2-clicker/releases) 下载最新版本的 `ra2-clicker.exe`，建议单独创建文件夹存放（程序会在同目录生成配置文件 `ra2-clicker.toml`）。
 
 ## 构建
 
