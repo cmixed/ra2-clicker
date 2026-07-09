@@ -88,7 +88,7 @@ impl Default for Config {
             click_interval_ms: 10,
             use_ra2_ol_style: true,
             left_click: true,
-            right_click: false,
+            right_click: true,
             hotkey: "shift".into(),
             hotkey_code: 0,
             enable_ra2_mode: true,

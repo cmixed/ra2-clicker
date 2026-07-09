@@ -190,11 +190,11 @@ export component AppWindow inherits Window {
         // Auto detect | Click on
         HorizontalLayout { spacing: 8px;
             HorizontalLayout { spacing: 4px;
-                ToggleSwitch { checked: auto-detect-mode; on-color: toggle-on; off-color: toggle-off; toggled => { toggle-auto-detect(); } }
+                ToggleSwitch { checked <=> auto-detect-mode; on-color: toggle-on; off-color: toggle-off; toggled => { toggle-auto-detect(); } }
                 Text { text: "自动检测进程"; color: txt; font-size: 13px; }
             }
             HorizontalLayout { spacing: 4px;
-                ToggleSwitch { checked: click-on; on-color: toggle-on; off-color: toggle-off; toggled => { toggle-click-on(); } }
+                ToggleSwitch { checked <=> click-on; on-color: toggle-on; off-color: toggle-off; toggled => { toggle-click-on(); } }
                 Text { text: "连点开关"; color: txt; font-size: 13px; }
             }
         }
@@ -209,11 +209,11 @@ export component AppWindow inherits Window {
         // Left click | Right click
         HorizontalLayout { spacing: 8px;
             HorizontalLayout { spacing: 4px;
-                ToggleSwitch { checked: left-click; on-color: toggle-on; off-color: toggle-off; toggled => { toggle-left-click(); } }
+                ToggleSwitch { checked <=> left-click; on-color: toggle-on; off-color: toggle-off; toggled => { toggle-left-click(); } }
                 Text { text: "左键连点"; color: txt; font-size: 13px; }
             }
             HorizontalLayout { spacing: 4px;
-                ToggleSwitch { checked: right-click; on-color: toggle-on; off-color: toggle-off; toggled => { toggle-right-click(); } }
+                ToggleSwitch { checked <=> right-click; on-color: toggle-on; off-color: toggle-off; toggled => { toggle-right-click(); } }
                 Text { text: "右键连点"; color: txt; font-size: 13px; }
             }
         }
