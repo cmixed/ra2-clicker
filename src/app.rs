@@ -285,8 +285,8 @@ fn connect_callbacks(ui: &AppWindow, shared: &Arc<engine::SharedState>) {
     });
 
     ui.on_open_homepage(move || {
-        let _ = std::process::Command::new("explorer")
-            .arg("https://gitee.com/cmixed/ra2-clicker")
+        let _ = std::process::Command::new("cmd")
+            .args(["/c", "start", "https://gitee.com/cmixed/ra2-clicker"])
             .spawn();
     });
 }
