@@ -302,48 +302,6 @@ fn connect_callbacks(ui: &AppWindow, shared: &Arc<engine::SharedState>) {
         cfg.save().ok();
     });
 
-    let sh = shared.clone();
-    let weak = ui.as_weak();
-    ui.on_click_counts_edited(move |text| {
-        let ui = match weak.upgrade() {
-            Some(ui) => ui,
-            None => return,
-        };
-        let value = text.parse::<i32>().unwrap_or(5).clamp(0, 30);
-        ui.set_click_counts(value);
-        let mut cfg = sh.config.write().unwrap();
-        cfg.click_counts = value as u32;
-        cfg.save().ok();
-    });
-
-    let sh = shared.clone();
-    let weak = ui.as_weak();
-    ui.on_click_interval_edited(move |text| {
-        let ui = match weak.upgrade() {
-            Some(ui) => ui,
-            None => return,
-        };
-        let value = text.parse::<i32>().unwrap_or(10).clamp(1, 200);
-        ui.set_click_interval_ms(value);
-        let mut cfg = sh.config.write().unwrap();
-        cfg.click_interval_ms = value as u32;
-        cfg.save().ok();
-    });
-
-    let sh = shared.clone();
-    let weak = ui.as_weak();
-    ui.on_bar_width_edited(move |text| {
-        let ui = match weak.upgrade() {
-            Some(ui) => ui,
-            None => return,
-        };
-        let value = text.parse::<i32>().unwrap_or(160).clamp(50, 500);
-        ui.set_construction_bar_width(value);
-        let mut cfg = sh.config.write().unwrap();
-        cfg.construction_bar_width = value as u32;
-        cfg.save().ok();
-    });
-
     let weak = ui.as_weak();
     ui.on_open_about(move || {
         if let Some(ui) = weak.upgrade() {

@@ -1,4 +1,4 @@
-import { Slider, LineEdit } from "std-widgets.slint";
+import { Slider } from "std-widgets.slint";
 
 component ToggleSwitch inherits Rectangle {
     callback toggled();
@@ -106,7 +106,7 @@ export component AppWindow inherits Window {
     in-out property <int> construction-bar-width: 160;
     in-out property <bool> dark-mode: true;
     in-out property <bool> remember-position: true;
-    in-out property <string> app-version: "2.3.0";
+    in-out property <string> app-version: "2.3.1";
 
     in-out property <color> bg: dark-mode ? #1e1e1e : #ebecf0;
     in-out property <color> txt: dark-mode ? #ccc : #222;
@@ -134,9 +134,6 @@ export component AppWindow inherits Window {
     callback click-counts-changed(int);
     callback click-interval-changed(int);
     callback construction-bar-width-changed(int);
-    callback click-counts-edited(string);
-    callback click-interval-edited(string);
-    callback bar-width-edited(string);
 
     background: bg;
 
@@ -205,7 +202,7 @@ export component AppWindow inherits Window {
         // Click count slider
         HorizontalLayout { spacing: 8px;
             Text { text: "连点次数"; color: txt; font-size: 13px; vertical-alignment: center; }
-            LineEdit { text: click-counts; font-size: 13px; width: 48px; edited(t) => { click-counts-edited(t); } }
+            Text { text: click-counts; color: txt; font-size: 13px; vertical-alignment: center; min-width: 24px; horizontal-alignment: center; }
             Slider { minimum: 0; maximum: 30; height: 24px; value: click-counts; changed(v) => { click-counts = v; click-counts-changed(v); } }
         }
 
@@ -242,7 +239,7 @@ export component AppWindow inherits Window {
 
         if (show-advanced) : HorizontalLayout { spacing: 8px;
             Text { text: "点击间隔 (ms)"; color: txt; font-size: 13px; vertical-alignment: center; }
-            LineEdit { text: click-interval-ms; font-size: 13px; width: 48px; edited(t) => { click-interval-edited(t); } }
+            Text { text: click-interval-ms; color: txt; font-size: 13px; vertical-alignment: center; min-width: 40px; horizontal-alignment: center; }
             Slider { minimum: 1; maximum: 200; height: 24px; value: click-interval-ms; changed(v) => { click-interval-ms = v; click-interval-changed(v); } }
         }
 
@@ -269,7 +266,7 @@ export component AppWindow inherits Window {
 
         if (show-advanced && enable-ra2-mode) : HorizontalLayout { spacing: 8px;
             Text { text: "建造栏宽度 (px)"; color: txt; font-size: 13px; vertical-alignment: center; }
-            LineEdit { text: construction-bar-width; font-size: 13px; width: 48px; edited(t) => { bar-width-edited(t); } }
+            Text { text: construction-bar-width; color: txt; font-size: 13px; vertical-alignment: center; min-width: 24px; horizontal-alignment: center; }
             Slider { minimum: 50; maximum: 500; height: 24px; value: construction-bar-width; changed(v) => { construction-bar-width = v; construction-bar-width-changed(v); } }
         }
     }

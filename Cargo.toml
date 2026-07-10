@@ -1,12 +1,12 @@
 [package]
 name = "ra2-clicker"
-version = "2.3.0"
+version = "2.3.1"
 edition = "2021"
 
 [dependencies]
 slint = { version = "1.9", default-features = false, features = ["backend-winit", "renderer-software", "compat-1-2"] }
 serde = { version = "1", features = ["derive"] }
-toml = "0.8"
+toml = "1.1"
 mimalloc = "0.1"
 
 [build-dependencies]
